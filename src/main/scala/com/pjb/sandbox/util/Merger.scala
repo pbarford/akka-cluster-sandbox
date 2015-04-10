@@ -5,12 +5,17 @@ import com.fasterxml.jackson.core.`type`.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.scala.DefaultScalaModule
 
+
 object Merger {
   private val keysFor = Map("markets" -> "id", "selections" -> "id", "indexResults" -> "indexValue")
 
   private val typeRef = new TypeReference[Map[String, AnyRef]] {}
-  private val mapper = new ObjectMapper()
-  mapper.registerModule(DefaultScalaModule)
+
+  private lazy val mapper = {
+    val m = new ObjectMapper()
+    m.registerModule(DefaultScalaModule)
+    m
+  }
 
   def toMap(data: String): Map[String, AnyRef] = {
     mapper.readValue(data, typeRef)

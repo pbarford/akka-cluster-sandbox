@@ -2,7 +2,7 @@ package com.pjb.sandbox.actors
 
 import akka.actor.{Props, ReceiveTimeout, ActorLogging}
 import akka.actor.SupervisorStrategy.Stop
-import akka.persistence.{RecoveryCompleted, PersistentActor}
+import akka.persistence.{SnapshotOffer, RecoveryCompleted, PersistentActor}
 import akka.contrib.pattern.ShardRegion
 import scala.concurrent.duration._
 
@@ -41,6 +41,11 @@ class PersistentJournal extends PersistentActor with ActorLogging {
     case restoredState:EventState =>
       log.info(s"******** restoring state upto seqNo : ${restoredState.uptoSeqNo}")
       state = Some(restoredState)
+
+    case SnapshotOffer(_, snapshot:EventState) =>
+      log.info(s"******** restoring SnapshotOffer upto seqNo : ${snapshot.uptoSeqNo}")
+      state = Some(snapshot)
+
     case RecoveryCompleted =>
       if(state.isDefined) {
         log.info(s"******** state upto seqNo : ${state.get.uptoSeqNo}")
@@ -53,10 +58,10 @@ class PersistentJournal extends PersistentActor with ActorLogging {
   override def receiveCommand: Receive = {
     case msg:Message =>
       log.info(s"******** msg received ${msg.data} ")
-      persist(EventState(msg.key, msg.seqNo, msg.data)) { merged =>
-        state = Some(merged)
-        persistInCassandra(msg)
-      }
+      state = Some(EventState(msg.key, msg.seqNo, msg.data))
+      saveSnapshot(state.get)
+      persistInCassandra(msg)
+
       sender() ! AckMsg(msg.deliveryInfo)
 
     case ReceiveTimeout =>

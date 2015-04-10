@@ -12,8 +12,6 @@ trait RabbitMqModule extends ShutdownListener {
     val cf = new ConnectionFactory()
     cf.setUsername(rabbitUser)
     cf.setPassword(rabbitPassword)
-    cf.setRequestedHeartbeat(rabbitHeartBeatInSec)
-    cf.setConnectionTimeout(rabbitConnTimeoutInMs)
     cf.setVirtualHost(rabbitVhost)
     cf.setHost(rabbitHost)
     cf.setPort(rabbitPort)
@@ -22,6 +20,7 @@ trait RabbitMqModule extends ShutdownListener {
   }
 
   private def initialiseConnection:Connection = {
+    println("initializing new connection")
     val conn:Connection = {
       if (rabbitAddresses.nonEmpty)
         internalCf.newConnection(rabbitAddresses)
@@ -40,5 +39,10 @@ trait RabbitMqModule extends ShutdownListener {
     }
   }
 
-  override def shutdownCompleted(cause: ShutdownSignalException): Unit = initialiseConnection
+  override def shutdownCompleted(cause: ShutdownSignalException): Unit = {
+    println("**************** shutdownCompleted **********************")
+    println(cause.getMessage)
+    println("**************** shutdownCompleted **********************")
+    initialiseConnection
+  }
 }

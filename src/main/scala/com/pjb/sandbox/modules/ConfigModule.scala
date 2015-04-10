@@ -18,5 +18,5 @@ trait ConfigModule {
   def rabbitHeartBeatInSec:Int = 30
   def rabbitConnTimeoutInMs:Int = 60
   def rabbitHost:String = "127.0.0.1"
-  def rabbitPort:Int = 5671
+  def rabbitPort:Int = 5672
 }

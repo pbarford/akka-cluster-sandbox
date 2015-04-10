@@ -22,6 +22,8 @@ package object actors {
   val sentSeqNoTable:String = "sentseqno"
   val eventActivityTable:String = "eventactivity"
 
+  val ttlProperty:String = "x-message-ttl"
+
   case class AckMsg(deliveryInfo:DeliveryInfo)
   case class StartConsumer(queue:String)
 
