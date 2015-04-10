@@ -37,6 +37,7 @@
         <skipTests>false</skipTests>
         <amqp-client.version>3.3.4</amqp-client.version>
         <akka.version>2.3.9</akka.version>
+        <json4s-native_2.11.version>3.2.10</json4s-native_2.11.version>
     </properties>
 
 
@@ -88,6 +89,12 @@
             <groupId>com.github.krasserm</groupId>
             <artifactId>akka-persistence-cassandra-12_2.11</artifactId>
             <version>0.3.4</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.json4s</groupId>
+            <artifactId>json4s-native_2.11</artifactId>
+            <version>${json4s-native_2.11.version}</version>
         </dependency>
 
         <dependency>

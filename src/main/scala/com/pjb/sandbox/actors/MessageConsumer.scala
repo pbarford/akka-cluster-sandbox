@@ -4,12 +4,12 @@ import java.util
 
 import akka.actor.{ActorLogging, Props, Actor}
 import akka.contrib.pattern.ClusterSharding
-import com.fasterxml.jackson.core.JsonProcessingException
-import com.pjb.sandbox.util.Merger
 import com.rabbitmq.client.AMQP.BasicProperties
 import com.rabbitmq.client._
-
-import scala.util.Try
+import com.rabbitmq.client.impl.LongStringHelper
+import org.json4s.JsonAST.{JString, JField, JObject}
+import org.json4s.{CustomSerializer, DefaultFormats}
+import org.json4s.native.Serialization.write
 
 object MessageConsumer {
   def props(rabbitConnectionFactory: () => Connection,
@@ -19,9 +19,9 @@ object MessageConsumer {
 
 class MessageConsumer(rabbitConnectionFactory: () => Connection,
                       queue:String) extends Actor with ActorLogging with Consumer {
+  implicit lazy val formats = DefaultFormats + new LongStringSerializer
   val journalTTL:Long = 60000
   val journalRegion = ClusterSharding(context.system).shardRegion(PersistentJournal.shardName)
-  var channel:Channel = rabbitConnectionFactory().createChannel()
   init()
 
   def init(): Unit = {
@@ -33,29 +33,25 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
     }
     val queueArgs = new util.HashMap[String, Object]()
     queueArgs.put(ttlProperty, Long.box(journalTTL))
+    val channel:Channel = rabbitConnectionFactory().createChannel()
     channel.queueDeclare(queue, false, false, false, queueArgs)
     channel.basicConsume(queue, false, consumerTagFor(queue, hostName), this)
     log.info(s"******** consumer [${self.path.name}]")
-    context.become(connected)
+    context.become(connected(channel))
   }
 
   def generateMessage(basicProps: BasicProperties, envelope: Envelope, data: Array[Byte]): Message = {
     import scala.collection.JavaConverters
     val headers: Map[String, AnyRef] = JavaConverters.mapAsScalaMapConverter(basicProps.getHeaders).asScala.toMap
-    log.info("build message")
     val key = keyFromHeaders(headers)
-    log.info(s"key --> $key")
     val seqNo = if(headers.contains(sequenceNumberHeader)) java.lang.Integer.parseInt(headers(sequenceNumberHeader).toString) else 0
-    log.info(s"seqno --> $seqNo")
     val status = getStatusFromHeaders(headers)
-    log.info(s"status --> $status")
-    //val headersJson = Merger.toJson(headers)
-    //log.info(s"headersJson --> $headersJson")
+    val headersJson = write(headers)
     Message(key,
       DeliveryInfo(System.currentTimeMillis(), envelope.getDeliveryTag),
       seqNo,
       status,
-      "",
+      headersJson,
       new String(data, "UTF-8"))
   }
 
@@ -96,7 +92,6 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
 
 
   override def handleDelivery(consumerTag: String, envelope: Envelope, properties: BasicProperties, body: Array[Byte]): Unit = {
-    log.info("******** handle message from rabbit")
     self ! generateMessage(properties, envelope, body)
   }
 
@@ -106,7 +101,7 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
     case _ => log.info("******** not connected")
   }
 
-  def connected: Receive = {
+  def connected(channel:Channel): Receive = {
     case msg:Message =>
       log.info(s"******** msg received ")
       journalRegion.forward(msg)
@@ -119,4 +114,10 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
   }
 
   def consumerTagFor(queue:String, hostName:String):String = s"$queue-$hostName"
+
+  //This is only used to convert to JSON - the from JSON implementation *is only provided as it is required*
+  private class LongStringSerializer extends CustomSerializer[LongString](format => (
+    { case JObject(JField("destination", JString(s)) :: Nil) => LongStringHelper.asLongString(s) },
+    { case x: LongString => JString(x.toString) }))
+
 }
