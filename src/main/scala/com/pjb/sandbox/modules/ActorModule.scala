@@ -7,28 +7,16 @@ import com.pjb.sandbox.actors._
 
 trait ActorModule {
 
-  this: RabbitMqModule with ConfigModule =>
+  this: RabbitMqModule with CassandraModule with ConfigModule  =>
 
   lazy val actorSystem:ActorSystem = {
     val system = ActorSystem("ClusterSystem", configuration)
-/*
-    ClusterSharding(system).start(
-      typeName = LatestState.shardName,
-      entryProps = Some(LatestState.props()),
-      idExtractor = LatestState.idExtractor,
-      shardResolver = LatestState.shardResolver)
 
     ClusterSharding(system).start(
       typeName = Journal.shardName,
-      entryProps = Some(Journal.props()),
+      entryProps = Some(Journal.props(cassandraSession)),
       idExtractor = Journal.idExtractor,
       shardResolver = Journal.shardResolver)
-*/
-    ClusterSharding(system).start(
-      typeName = PersistentJournal.shardName,
-      entryProps = Some(PersistentJournal.props()),
-      idExtractor = PersistentJournal.idExtractor,
-      shardResolver = PersistentJournal.shardResolver)
 
     system
   }

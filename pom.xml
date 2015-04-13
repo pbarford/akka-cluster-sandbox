@@ -47,6 +47,7 @@
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>3.0.1</version>
+            <scope>provided</scope>
         </dependency>
 
 
@@ -89,6 +90,16 @@
             <groupId>com.github.krasserm</groupId>
             <artifactId>akka-persistence-cassandra-12_2.11</artifactId>
             <version>0.3.4</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mortbay.jetty</groupId>
+                    <artifactId>servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -192,6 +203,7 @@
     </dependencies>
 
     <build>
+        <finalName>akka-sandbox</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>

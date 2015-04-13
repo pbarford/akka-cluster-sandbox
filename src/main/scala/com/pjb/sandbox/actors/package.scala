@@ -27,6 +27,7 @@ package object actors {
   case class AckMsg(deliveryInfo:DeliveryInfo)
   case class StartConsumer(queue:String)
 
+  case class GetLatestState(key:MessageKey)
 
   case class EventState(key:MessageKey, uptoSeqNo:Int, data:String)
   case class DeliveryInfo(consumedAt:Long, deliveryTag:Long)

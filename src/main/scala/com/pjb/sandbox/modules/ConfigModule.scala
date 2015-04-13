@@ -19,4 +19,10 @@ trait ConfigModule {
   def rabbitConnTimeoutInMs:Int = 60
   def rabbitHost:String = "127.0.0.1"
   def rabbitPort:Int = 5672
+
+  def cassandraContactPoints = "127.0.0.1"
+  def cassandraUsername = ""
+  def cassandraPassword = ""
+  def cassandraKeyspace = "dm_keyspace_dev"
+  def cassandraUseSSL = false
 }

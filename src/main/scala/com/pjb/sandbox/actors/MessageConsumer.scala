@@ -21,7 +21,7 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
                       queue:String) extends Actor with ActorLogging with Consumer {
   implicit lazy val formats = DefaultFormats + new LongStringSerializer
   val journalTTL:Long = 60000
-  val journalRegion = ClusterSharding(context.system).shardRegion(PersistentJournal.shardName)
+  val journalRegion = ClusterSharding(context.system).shardRegion(Journal.shardName)
   init()
 
   def init(): Unit = {
@@ -104,7 +104,7 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
   def connected(channel:Channel): Receive = {
     case msg:Message =>
       log.info(s"******** msg received ")
-      journalRegion.forward(msg)
+      journalRegion forward msg
 
     case AckMsg(deliveryInfo:DeliveryInfo) =>
       log.info(s"ack --> ${deliveryInfo.deliveryTag} took ${System.currentTimeMillis() - deliveryInfo.consumedAt} m/s")
