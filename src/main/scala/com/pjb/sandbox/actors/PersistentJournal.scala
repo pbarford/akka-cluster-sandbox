@@ -19,7 +19,7 @@ object PersistentJournal {
   val shardResolver: ShardRegion.ShardResolver = msg => msg match {
     case m: Message => (math.abs(idFromMessageKey(m.key).hashCode) % 100).toString
   }
-  private def idFromMessageKey(key:MessageKey):String = {
+  private def idFromMessageKey(key:CorrelationKey):String = {
     key match {
       case (Some(dest), eventId) => s"$dest:$eventId"
       case (None, eventId) => eventId.toString

@@ -27,16 +27,17 @@ package object actors {
   case class AckMsg(deliveryInfo:DeliveryInfo)
   case class StartConsumer(queue:String)
 
-  case class GetLatestState(key:MessageKey)
+  case class GetLatestState(key:CorrelationKey)
 
-  case class EventState(key:MessageKey, uptoSeqNo:Int, data:String)
+  case class EventState(key:CorrelationKey, uptoSeqNo:Int, data:String)
+
   case class DeliveryInfo(consumedAt:Long, deliveryTag:Long)
-  case class Message(key:MessageKey,
+  case class Message(key:CorrelationKey,
                      deliveryInfo: DeliveryInfo,
                      seqNo:Int,
                      status: Option[String],
                      headers: String,
                      data:String)
 
-  type MessageKey = (Option[String],Long)
+  type CorrelationKey = (Option[String],Long)
 }

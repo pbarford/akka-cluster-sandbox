@@ -11,7 +11,20 @@ class Snapshot(cassandraSession:() => Session) extends Actor with ActorLogging {
   var state:Option[EventState] = Some(EventState((Some("blah"), 12345), 1, "init"))
 
   val session = cassandraSession()
-  log.info(s"snapshot --> ${self.path.parent.name}")
+  val key:Option[CorrelationKey] = getKeyFromParentName()
+
+  def getKeyFromParentName():Option[CorrelationKey] = {
+    self.path.parent.name.split('.') match {
+      case Array(dest:String, eventId:String) =>
+        println(s"$dest--->$eventId")
+        Some((Some(dest),Long.unbox(eventId)))
+      case Array(eventId:String) =>
+        println(s"$eventId")
+        Some((None,Long.unbox(eventId)))
+      case _ =>
+        None
+    }
+  }
 
   override def postStop(): Unit = {
     log.info("Snapshot saying bye bye")

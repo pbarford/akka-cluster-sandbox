@@ -55,7 +55,7 @@ class MessageConsumer(rabbitConnectionFactory: () => Connection,
       new String(data, "UTF-8"))
   }
 
-  def keyFromHeaders(headers: Map[String, AnyRef]):MessageKey = {
+  def keyFromHeaders(headers: Map[String, AnyRef]):CorrelationKey = {
     headers.contains(destinationHeader) match {
       case true => (Some(headers(destinationHeader).toString), java.lang.Long.parseLong(headers(eventIdHeader).toString))
       case false => (None, java.lang.Long.parseLong(headers(eventIdHeader).toString))
